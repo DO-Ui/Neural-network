@@ -1,5 +1,8 @@
 from Layer import Layer
 from DataPoint import DataPoint
+
+import multiprocessing
+
 class NeuralNetwork:
 	layers = []
 
@@ -8,7 +11,7 @@ class NeuralNetwork:
 		for i in range(len(self.layers)):
 			self.layers[i] = Layer(layerSizes[i], layerSizes[i+1])
 
-
+	# multiprocessing could be used here
 	def CalculateOutputs(self, inputs:list) -> list:
 		for layer in self.layers:
 			inputs = layer.CalculateOutputs(inputs)
@@ -65,16 +68,17 @@ class NeuralNetwork:
 			layer.ResetGradients()
 
 		# print avg cost
-		
+		print(self.TotalCost(trainingData))
 
 
 
 	def UpdateAllGradients(self, dataPoint:DataPoint):
 
 		inputsToNextLayer = dataPoint.inputs
+		# multiprocess this
 		for layer in self.layers:
 			inputsToNextLayer = layer.CalculateOutputs(inputsToNextLayer)
-			
+		
 
 		# self.CalculateOutputs(dataPoint.inputs)
 
@@ -87,4 +91,16 @@ class NeuralNetwork:
 			nodeValues = hiddenLayer.CalculateHiddenLayerNodeValues(self.layers[hiddenLayerIndex+1], nodeValues)
 			hiddenLayer.UpdateGradients(nodeValues) # double check this
 
-	
+	def Save(self, fileName:str):
+		file = open(fileName, "w")
+		for layer in self.layers:
+			file.write(str(layer.weights) + "\n")
+			file.write(str(layer.biases) + "\n")
+		file.close()
+
+	def Load(self, fileName:str):
+		file = open(fileName, "r")
+		for layer in self.layers:
+			layer.weights = eval(file.readline())
+			layer.biases = eval(file.readline())
+		file.close()

@@ -1,47 +1,95 @@
 from NeuralNetwork import NeuralNetwork
 from DataPoint import DataPoint
+
 import time
 import matplotlib.pyplot as plt
+import cv2
+import imutils
+import os
+import random
+
+inputs:int = 784
+outputs:int = 10
+learnRate:float = 0.1
 
 trainingData = []
 
-with open("train.txt", "r") as file:
-	data = file.readlines()
-	for line in data:
-		label = int(line.split()[-1])
-		_point = line.split()[0].strip("()").split(",")
-		x = float(_point[0])
-		y = float(_point[1])
-		trainingData.append(DataPoint([x, y], label, 2))
+trainData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/train")
+
+for root, dirs, files in trainData:
+	# print(dirs)
+	for file in files:
+		label = root.split("/")[-1]
+		# print(label)
+		img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
+		img = imutils.rotate(img, random.randint(-15, 15))
+		img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+
+		# convert to 1D array
+		img = img.flatten()
+		# for each pixel, get value between 0.0 and 1.0
+		img = img / 255.0
+		trainingData.append(DataPoint(img, int(label), outputs))
 
 
-network = NeuralNetwork([2, 150, 15, 2])
+# shuffle training data
+trainingData = random.sample(trainingData, len(trainingData))
+# trim training data
+trainingData = trainingData[:500]
+
+network = NeuralNetwork([inputs, 150, outputs])
 last_time = time.time()
-for i in range(500):
-	if i % 10 == 0:
+for i in range(20):
+	if i % 1 == 0:
 		print("Epoch", i)
 		print("Time elapsed:", round(time.time() - last_time, 2), "s")
 		last_time = time.time()
-		cost = network.TotalCost(trainingData)
-		print("Cost:", cost)
-		plt.plot(i, cost, "ro")
-	network.Learn(trainingData, 0.4)
+		# cost = network.TotalCost(trainingData)
+		# print("Cost:", cost)
+		# plt.plot(i, cost, "ro")
+	network.Learn(trainingData, learnRate)
+
+# save network
+network.Save("network.txt")
 
 
-with open("test.txt", "r") as file:
-	data = file.readlines()
+# # load network
+# network.Load("network.txt")
 
-	accuracy:float = 0.0
-	for line in data:
-		_point = line.split()[0].strip("()").split(",")
-		x = float(_point[0])
-		y = float(_point[1])
-		result = network.Classify([x, y])
-		print("Result: " + str(result), end=" ")
-		print("Expected: " + str(int(line.split()[-1])))
-		if result == int(line.split()[-1]):
-			accuracy += 100
-	accuracy /= len(data)
-	print("Accuracy: " + str(round(accuracy, 2)) + "%")
+# testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
 
-plt.show()
+# accuracy:float = 0.0
+
+# for root, dirs, files in testData:
+# 	for file in files:
+# 		label = root.split("/")[-1]
+# 		# print(label)
+# 		img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
+# 		img = imutils.rotate(img, random.randint(-15, 15))
+# 		img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+
+# 		# convert to 1D array
+# 		img = img.flatten()
+# 		# for each pixel, get value between 0.0 and 1.0
+# 		img = img / 255.0
+# 		result = network.Classify(img)
+# 		print("Result: " + str(result), end=" ")
+# 		print("Expected: " + str(int(label)))
+# 		if result == int(label):
+# 			accuracy += 100
+
+# accuracy /= len(trainingData)
+# print("Accuracy: " + str(round(accuracy, 2)) + "%")
+
+
+
+
+
+
+# img = cv2.imread("/home/doui/Documents/Code-Stuff/Ai/digits/test/5/img_11.jpg", cv2.IMREAD_GRAYSCALE)
+# img = img.flatten()
+# img = img / 255.0
+# print(network.Classify(img))
+
+
+# plt.show()
