@@ -1,5 +1,6 @@
 from NeuralNetwork import NeuralNetwork
 from DataPoint import DataPoint
+import time
 
 trainingData = []
 
@@ -14,9 +15,12 @@ with open("train.txt", "r") as file:
 
 
 network = NeuralNetwork([2, 3, 2])
-for i in range(1000):
+last_time = time.time()
+for i in range(500):
 	if i % 10 == 0:
 		print("Epoch", i)
+		print("Time elapsed:", round(time.time() - last_time, 2), "s")
+		last_time = time.time()
 	network.Learn(trainingData, 0.8)
 
 
