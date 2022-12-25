@@ -29,6 +29,7 @@ class NeuralNetwork:
 		totalCost:float = 0.0
 		for dataPoint in dataPoints:
 			totalCost += self.Cost(dataPoint)
+
 		return totalCost / len(dataPoints)
 
 	# def Learn(self, trainingData:list, learnRate:float):
@@ -62,6 +63,8 @@ class NeuralNetwork:
 		# clear gradients
 		for layer in self.layers:
 			layer.ResetGradients()
+
+		# print avg cost
 		
 
 

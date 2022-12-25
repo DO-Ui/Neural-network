@@ -1,6 +1,7 @@
 from NeuralNetwork import NeuralNetwork
 from DataPoint import DataPoint
 import time
+import matplotlib.pyplot as plt
 
 trainingData = []
 
@@ -21,7 +22,10 @@ for i in range(500):
 		print("Epoch", i)
 		print("Time elapsed:", round(time.time() - last_time, 2), "s")
 		last_time = time.time()
-	network.Learn(trainingData, 0.75)
+		cost = network.TotalCost(trainingData)
+		print("Cost:", cost)
+		plt.plot(i, cost, "ro")
+	network.Learn(trainingData, 0.4)
 
 
 with open("test.txt", "r") as file:
@@ -39,3 +43,5 @@ with open("test.txt", "r") as file:
 			accuracy += 100
 	accuracy /= len(data)
 	print("Accuracy: " + str(round(accuracy, 2)) + "%")
+
+plt.show()
