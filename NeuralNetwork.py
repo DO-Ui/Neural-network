@@ -1,6 +1,7 @@
 from Layer import Layer
+from DataPoint import DataPoint
 class NeuralNetwork:
-	layers:Layer = []
+	layers = []
 
 	def __init__(self, layerSizes:list):
 		self.layers = [Layer for i in range(len(layerSizes)-1)]
@@ -30,32 +31,57 @@ class NeuralNetwork:
 			totalCost += self.Cost(dataPoint)
 		return totalCost / len(dataPoints)
 
+	# def Learn(self, trainingData:list, learnRate:float):
+	# 	h:float = 0.0001
+	# 	originalCost:float = self.TotalCost(trainingData)
+
+	# 	for layer in self.layers:
+	# 		for nodeIn in range(layer.numNodesIn):
+	# 			for nodeOut in range(layer.numNodesOut):
+	# 				layer.weights[nodeIn][nodeOut] += h
+	# 				deltaCost:float = self.TotalCost(trainingData) - originalCost
+	# 				layer.weights[nodeIn][nodeOut] -= h
+	# 				layer.costGradientW[nodeIn][nodeOut] = deltaCost / h
+
+	# 		for biasIndex in range(len(layer.biases)):
+	# 			layer.biases[biasIndex] += h
+	# 			deltaCost:float = self.TotalCost(trainingData) - originalCost
+	# 			layer.biases[biasIndex] -= h
+	# 			layer.costGradientB[biasIndex] = deltaCost / h
+
+	# 	for layer in self.layers:
+	# 		layer.ApplyGradients(learnRate)
+
 	def Learn(self, trainingData:list, learnRate:float):
-		h:float = 0.0001
-		originalCost:float = self.TotalCost(trainingData)
+		for dataPoint in trainingData:
+			self.UpdateAllGradients(dataPoint)
 
 		for layer in self.layers:
-			for nodeIn in range(layer.numNodesIn):
-				for nodeOut in range(layer.numNodesOut):
-					layer.weights[nodeIn][nodeOut] += h
-					deltaCost:float = self.TotalCost(trainingData) - originalCost
-					layer.weights[nodeIn][nodeOut] -= h
-					layer.costGradientW[nodeIn][nodeOut] = deltaCost / h
+			layer.ApplyGradients(learnRate / len(trainingData))
 
-			for biasIndex in range(len(layer.biases)):
-				layer.biases[biasIndex] += h
-				deltaCost:float = self.TotalCost(trainingData) - originalCost
-				layer.biases[biasIndex] -= h
-				layer.costGradientB[biasIndex] = deltaCost / h
-
+		# clear gradients
 		for layer in self.layers:
-			layer.ApplyGradients(learnRate)
-
-		# print layers
-		# for idx, layer in enumerate(self.layers):
-		# 	print("Weights for layer", idx, ":")
-		# 	for nodeIn in range(layer.numNodesIn):
-		# 		print(layer.weights[nodeIn])
+			layer.ResetGradients()
+		
 
 
 
+	def UpdateAllGradients(self, dataPoint:DataPoint):
+
+		inputsToNextLayer = dataPoint.inputs
+		for layer in self.layers:
+			inputsToNextLayer = layer.CalculateOutputs(inputsToNextLayer)
+			
+
+		# self.CalculateOutputs(dataPoint.inputs)
+
+		outputLayer = self.layers[-1]
+		nodeValues = outputLayer.CalculateOutputLayerNodeValues(dataPoint.expectedOutputs)
+		outputLayer.UpdateGradients(nodeValues) # note this too
+
+		for hiddenLayerIndex in range(len(self.layers)-2, -1, -1):
+			hiddenLayer:Layer = self.layers[hiddenLayerIndex]
+			nodeValues = hiddenLayer.CalculateHiddenLayerNodeValues(self.layers[hiddenLayerIndex+1], nodeValues)
+			hiddenLayer.UpdateGradients(nodeValues) # double check this
+
+	

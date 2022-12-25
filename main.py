@@ -14,14 +14,14 @@ with open("train.txt", "r") as file:
 		trainingData.append(DataPoint([x, y], label, 2))
 
 
-network = NeuralNetwork([2, 3, 2])
+network = NeuralNetwork([2, 150, 15, 2])
 last_time = time.time()
 for i in range(500):
 	if i % 10 == 0:
 		print("Epoch", i)
 		print("Time elapsed:", round(time.time() - last_time, 2), "s")
 		last_time = time.time()
-	network.Learn(trainingData, 0.8)
+	network.Learn(trainingData, 0.75)
 
 
 with open("test.txt", "r") as file:
