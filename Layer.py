@@ -1,5 +1,4 @@
 import math
-import decimal
 from random import random
 class Layer:
 	numNodesIn:int
@@ -35,7 +34,7 @@ class Layer:
 		for nodeOut in range(self.numNodesOut):
 			weightedInput = self.biases[nodeOut]
 			for nodeIn in range(self.numNodesIn):
-				weightedInput += self.weights[nodeIn][nodeOut] * inputs[nodeIn] # take a look at later
+				weightedInput += self.weights[nodeIn][nodeOut] * inputs[nodeIn]
 			weightedInputs[nodeOut] = weightedInput
 
 		activations = [0.0 for i in range(self.numNodesOut)]
