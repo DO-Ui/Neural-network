@@ -133,7 +133,7 @@ class NeuralNetwork:
 		np.savez(fileName, weights=weights, biases=biases)
 
 	def Load(self, fileName:str):
-		data = np.load(fileName)
+		data = np.load(fileName, allow_pickle=True)
 		for i in range(len(self.layers)):
 			self.layers[i].weights = data['weights'][i]
 			self.layers[i].biases = data['biases'][i]
