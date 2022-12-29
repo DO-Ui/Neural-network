@@ -66,4 +66,63 @@ def train(load = ""):
 
 	print("DONE!")
 
-train()
+
+def test(load):
+	network = NeuralNetwork([inputs, 150, outputs])
+	network.Load(load)
+
+	testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
+
+
+	data = []
+
+	for root, dirs, files in testData:
+		for file in files:
+			label = root.split("/")[-1]
+			# print(label)
+			img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
+			img = imutils.rotate(img, random.randint(-15, 15))
+			img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+
+			# convert to 1D array
+			img = img.flatten()
+			# for each pixel, get value between 0.0 and 1.0
+			img = img / 255.0
+			data.append([img, int(label)])
+
+
+	data_in = []
+	for i in range(len(data)):
+		data_in.append(data[i][0])
+
+	results = []
+
+	for i in range(len(data_in)):
+		results.append(network.Classify(data_in[i]))
+
+	# with ThreadPoolExecutor(max_workers=4) as executor:
+	# 	results = executor.map(network.Classify, data_in)
+  
+	accuracy:float = 0.0
+	tests:int = 0
+
+	for i in range(len(results)):
+		print("Expected:", data[i][1], "Got:", results[i])
+		if results[i] == data[i][1]:
+			accuracy += 100
+		tests += 1
+	
+
+			# result = network.Classify(img)
+			# print("Result: " + str(result), end=" ")
+			# print("Expected: " + str(int(label)))
+			# if result == int(label):
+			# 	accuracy += 100
+			# tests += 1
+
+	accuracy /= tests
+	print("Accuracy: " + str(round(accuracy, 2)) + "%")
+
+# train()
+
+test("network.npz")
