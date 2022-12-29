@@ -13,8 +13,10 @@ inputs:int = 784
 outputs:int = 10
 learnRate:float = 0.8
 
+network_structure = [inputs, 150, outputs]
+
 def train(load = ""):
-	network = NeuralNetwork([inputs, 150, outputs])
+	network = NeuralNetwork(network_structure)
 
 	if load != "":
 		network.Load(load)
@@ -42,7 +44,7 @@ def train(load = ""):
 	# shuffle training data
 	random.shuffle(trainingData)
 	# trim training data
-	trainingData = trainingData[:1000]
+	trainingData = trainingData
 
 	# count the labels in the training data
 	labelCount = [0 for i in range(outputs)]
@@ -68,7 +70,7 @@ def train(load = ""):
 
 
 def test(load):
-	network = NeuralNetwork([inputs, 150, outputs])
+	network = NeuralNetwork(network_structure)
 	network.Load(load)
 
 	testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
@@ -123,6 +125,6 @@ def test(load):
 	accuracy /= tests
 	print("Accuracy: " + str(round(accuracy, 2)) + "%")
 
-# train()
+train()
 
-test("network.npz")
+# test("network.npz")
