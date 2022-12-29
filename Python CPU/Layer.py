@@ -1,6 +1,9 @@
 import math
-import decimal
 from random import random
+import numpy as np
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
 class Layer:
 	numNodesIn:int
 	numNodesOut:int
@@ -28,19 +31,31 @@ class Layer:
 			for nodeIn in range(self.numNodesIn):
 				self.weights[nodeIn][nodeOut] -= learnRate * self.costGradientW[nodeIn][nodeOut]
 
-	def CalculateOutputs(self, inputs) -> list:
 
-		weightedInputs = [0.0 for i in range(self.numNodesOut)]
-
-		for nodeOut in range(self.numNodesOut):
-			weightedInput = self.biases[nodeOut]
-			for nodeIn in range(self.numNodesIn):
-				weightedInput += self.weights[nodeIn][nodeOut] * inputs[nodeIn] # take a look at later
-			weightedInputs[nodeOut] = weightedInput
-
+	def ApplyactivationFunctionThreaded(self, weightedInputs):
 		activations = [0.0 for i in range(self.numNodesOut)]
 		for nodeOut in range(self.numNodesOut):
 			activations[nodeOut] = self.ActivationFunction(weightedInputs[nodeOut])
+
+		return activations
+
+	def CalculateOutputs(self, inputs) -> list:
+
+		weightedInputs = [0.0 for _ in range(self.numNodesOut)]
+			
+		for nodeOut in range(self.numNodesOut):
+			weightedInput = self.biases[nodeOut]
+			for nodeIn in range(self.numNodesIn):
+				weightedInput += self.weights[nodeIn][nodeOut] * inputs[nodeIn]
+			weightedInputs[nodeOut] = weightedInput
+
+		# activations = [0.0 for i in range(self.numNodesOut)]
+		# for nodeOut in range(self.numNodesOut):
+		# 	activations[nodeOut] = self.ActivationFunction(weightedInputs[nodeOut])
+
+		with ThreadPoolExecutor() as executor:
+			future = executor.map(self.ApplyactivationFunctionThreaded, [weightedInputs])
+			activations = list(future)[0]
 
 		self.inputs = inputs
 		self.activations = activations
@@ -57,9 +72,8 @@ class Layer:
 		# return activations
 
 	def ActivationFunction(self, x:float) -> float:
-		return 1.0 / (1.0 + math.exp(-x))
-		# decimal.getcontext().prec = 100
-		# return float(decimal.Decimal("1.0") / (decimal.Decimal("1.0") + decimal.Decimal(math.exp(-x)).exp()))
+		# return max(0.0, x) # relu
+		return 1.0 / (1.0 + math.exp(-x)) # sigmoid
 
 	def ActivationFunctionDerivative(self, x:float) -> float:
 		activation_value = self.ActivationFunction(x)
@@ -82,21 +96,49 @@ class Layer:
 			nodeValues[nodeOut] = costDerivative * activationDerivative
 		return nodeValues
 
+
+	def UpdateGradientsHelper(self, nodeValues:list, nodeOut:int):
+		nodeValue:float = nodeValues[nodeOut]
+		for nodeIn in range(self.numNodesIn):
+			self.costGradientW[nodeIn][nodeOut] += nodeValue * self.inputs[nodeIn]
+
+		self.costGradientB[nodeOut] += nodeValues[nodeOut]
+
 	def UpdateGradients(self, nodeValues:list):
-		for nodeOut in range(self.numNodesOut):
-			nodeValue:float = nodeValues[nodeOut]
-			for nodeIn in range(self.numNodesIn):
-				self.costGradientW[nodeIn][nodeOut] += nodeValue * self.inputs[nodeIn]
+		# print("Updating gradients")
 
-		for nodeOut in range(self.numNodesOut):
-			self.costGradientB[nodeOut] += nodeValues[nodeOut]
+		# with ThreadPoolExecutor() as executor:
+		# 	for nodeOut in range(self.numNodesOut):
+		# 		executor.submit(self.UpdateGradientsHelper, nodeValues, nodeOut)
 
+		# with multiprocessing.Pool() as pool:
+		# 	pool.starmap(self.UpdateGradientsHelper, [(nodeValues, i) for i in range(self.numNodesOut)])
+
+		# print("Done updating gradients")
+
+		with ThreadPoolExecutor() as executor:
+			for i in range(self.numNodesOut):
+				executor.submit(self.UpdateGradientsHelper, nodeValues, i)
+			# executor.map(self.UpdateGradientsHelper, [nodeValues for i in range(self.numNodesOut)], [i for i in range(self.numNodesOut)])
+
+
+		# for nodeOut in range(self.numNodesOut):
+		# 	nodeValue:float = nodeValues[nodeOut]
+		# 	for nodeIn in range(self.numNodesIn):
+		# 		self.costGradientW[nodeIn][nodeOut] += nodeValue * self.inputs[nodeIn]
+		# 	self.costGradientB[nodeOut] += nodeValues[nodeOut]
+
+		# for nodeOut in range(self.numNodesOut):
+	
 		# 	self.costGradientB[nodeOut] += nodeValues[nodeOut]
 		# 	for nodeIn in range(self.numNodesIn):
 		# 		self.costGradientW[nodeIn][nodeOut] += nodeValues[nodeOut] * inputs[nodeIn]
 
+
+
 	def CalculateHiddenLayerNodeValues(self, oldLayer, oldNodeValues:list) -> list:
 		newNodeValues = [0.0 for i in range(self.numNodesOut)]
+
 		for newNodeIndex in range(self.numNodesOut):
 			newNodeValue = 0.0
 			for oldNodeIndex in range(len(oldNodeValues)):

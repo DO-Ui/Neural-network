@@ -7,4 +7,3 @@ class DataPoint:
 		self.inputs = inputs
 		self.label = label
 		self.expectedOutputs = [1 if i == label else 0 for i in range(numLabels)]
-

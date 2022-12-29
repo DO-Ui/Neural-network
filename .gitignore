@@ -1,3 +1,10 @@
 /.vscode
 /Old CPP
 /__pycache__
+archive.zip
+.gitignore
+.gitignore
+/data
+/digits
+test.py
+network.txt
