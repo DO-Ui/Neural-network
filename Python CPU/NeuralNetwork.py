@@ -1,7 +1,8 @@
 from Layer import Layer
 from DataPoint import DataPoint
-
+import numpy as np
 import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 
 class NeuralNetwork:
 	layers = []
@@ -21,6 +22,9 @@ class NeuralNetwork:
 		outputs = self.CalculateOutputs(inputs)
 		return outputs.index(max(outputs))
 
+
+	##### not really needed, only really used for debugging
+
 	def Cost(self, dataPoint) -> float:
 		outputs = self.CalculateOutputs(dataPoint.inputs)
 		cost:float = 0.0
@@ -30,10 +34,14 @@ class NeuralNetwork:
 
 	def TotalCost(self, dataPoints:list) -> float:
 		totalCost:float = 0.0
+		
 		for dataPoint in dataPoints:
 			totalCost += self.Cost(dataPoint)
 
+
 		return totalCost / len(dataPoints)
+
+	#####
 
 	# def Learn(self, trainingData:list, learnRate:float):
 	# 	h:float = 0.0001
@@ -60,6 +68,17 @@ class NeuralNetwork:
 		for dataPoint in trainingData:
 			self.UpdateAllGradients(dataPoint)
 
+		# apply gradients multiprocessing
+		# for layer in self.layers:
+		# 	p = multiprocessing.Process(target=layer.ApplyGradients, args=(learnRate / len(trainingData),))
+		# 	p.start()
+		# 	p.join()
+
+		# with ThreadPoolExecutor() as executor:
+		# 	executor.map(layer.applyGradients, [learnRate / len(trainingData) for layer in self.layers])
+			# for layer in self.layers:
+			# 	executor.submit(layer.ApplyGradients, learnRate / len(trainingData))
+
 		for layer in self.layers:
 			layer.ApplyGradients(learnRate / len(trainingData))
 
@@ -68,7 +87,7 @@ class NeuralNetwork:
 			layer.ResetGradients()
 
 		# print avg cost
-		print(self.TotalCost(trainingData))
+		# print(self.TotalCost(trainingData))
 
 
 
@@ -87,20 +106,20 @@ class NeuralNetwork:
 		outputLayer.UpdateGradients(nodeValues) # note this too
 
 		for hiddenLayerIndex in range(len(self.layers)-2, -1, -1):
-			hiddenLayer:Layer = self.layers[hiddenLayerIndex]
+			hiddenLayer = self.layers[hiddenLayerIndex]
 			nodeValues = hiddenLayer.CalculateHiddenLayerNodeValues(self.layers[hiddenLayerIndex+1], nodeValues)
 			hiddenLayer.UpdateGradients(nodeValues) # double check this
 
-	def Save(self, fileName:str):
-		file = open(fileName, "w")
+	def Save(self, filename:str):
+		file = open(filename, "w")
 		for layer in self.layers:
 			file.write(str(layer.weights) + "\n")
 			file.write(str(layer.biases) + "\n")
 		file.close()
 
-	def Load(self, fileName:str):
-		file = open(fileName, "r")
+	def Load(self, filename:str):
+		file = open(filename, "r")
 		for layer in self.layers:
-			layer.weights = eval(file.readline())
-			layer.biases = eval(file.readline())
+			layer.weights = np.array(eval(file.readline()))
+			layer.biases = np.array(eval(file.readline()))
 		file.close()
