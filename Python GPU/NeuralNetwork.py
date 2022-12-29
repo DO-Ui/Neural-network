@@ -1,5 +1,5 @@
 import numpy as np
-from numba import cuda
+from numba import cuda, jit
 from Layer import Layer
 from DataPoint import DataPoint
 
@@ -137,3 +137,37 @@ class NeuralNetwork:
 		for i in range(len(self.layers)):
 			self.layers[i].weights = data['weights'][i]
 			self.layers[i].biases = data['biases'][i]
+
+
+	##### DEBUGGING #####
+
+	def Cost(self, dataPoint:DataPoint) -> float:
+		outputs = self.CalculateOutputs(dataPoint.inputs)
+		cost:float = 0.0
+		# nodecosts = np.zeros(len(outputs))
+
+		# ### Copy over memory to GPU ###
+		# device_outputs = cuda.to_device(outputs)
+		# device_expectedOutputs = cuda.to_device(dataPoint.expectedOutputs)
+		# device_nodecosts = cuda.to_device(nodecosts)
+
+		# ### Process on GPU ###
+		# self.layers[-1].NodeCost[len(outputs), 1](device_outputs, device_expectedOutputs, device_nodecosts) # Execute 1 thread per node in parallel
+
+		# ### Copy back to CPU ###
+		# nodecosts = device_nodecosts.copy_to_host()
+
+		# for i in range(len(outputs)):
+		# 	cost += nodecosts[i]
+  
+		for i in range(len(outputs)):
+			cost += self.layers[-1].NodeCost(outputs[i], dataPoint.expectedOutputs[i])
+
+		return cost
+
+	def TotalCost(self, dataPoints) -> float:
+		totalCost:float = 0.0
+		for dataPoint in dataPoints:
+			totalCost += self.Cost(dataPoint)
+
+		return totalCost / len(dataPoints)

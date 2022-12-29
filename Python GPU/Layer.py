@@ -32,16 +32,11 @@ class Layer:
 
 	# @jit
 	# def ActivationFunctionDerivative(self, weightedInput:float) -> float:
-	# 	return np.exp(-weightedInput) / np.square(1 + np.exp(-weightedInput))
+	# 	return math.exp(-weightedInput) / math.square(1 + math.exp(-weightedInput))
 
-	# @jit
-	# def NodeCost(self, outputActivation:float, expectedOutput:float) -> float:
-	# 	error:float = outputActivation - expectedOutput
-	# 	return error * error
-
-	# @jit
-	# def NodeCostDerivative(self, outputActivation:float, expectedOutput:float) -> float:
-	# 	return 2 * (outputActivation - expectedOutput)
+	def NodeCost(self, outputActivation:float, expectedOutput:float) -> float:
+		error = outputActivation - expectedOutput
+		return error * error
 
 	@staticmethod
 	@cuda.jit

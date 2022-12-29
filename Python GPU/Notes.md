@@ -1,4 +1,16 @@
-Note:
+TODO: Try diffrent activation functions
+TODO: Add momentum?
+
+
+
+
+
+
+
+
+
+
+Cuda Notes:
 When calling cuda functions, [x,y] is required
 x stands for the number of tasks
 y stands for the number of threads per task
