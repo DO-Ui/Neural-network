@@ -9,13 +9,14 @@ from DataPoint import DataPoint
 import time
 import matplotlib.pyplot as plt
 
-inputs:int = 784
-outputs:int = 10
-learnRate:float = 1
+inputs:int = 2
+outputs:int = 3
+learnRate:float = 0.3
 
-network_structure = [inputs, outputs]
+network_structure = [inputs, 4, outputs]
 
-batch_size = 100
+batch_size = 32
+epochs = 1500
 
 def accuracy(network:NeuralNetwork, data):
 
@@ -51,57 +52,73 @@ def train(load = ""):
 
 	trainingData = []
 
-	trainData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/train")
+	with open("/home/doui/Documents/Code-Stuff/Ai/train.txt", "r") as file:
+		# data format: (x,y) label
+		for line in file:
+			label = int(line.split(" ")[1])
+			x = float(line.split(",")[0].split("(")[1])
+			y = float(line.split(",")[1].split(")")[0])
+			trainingData.append(DataPoint(np.array([x,y]), label, outputs))
 
-	for root, dirs, files in trainData:
-		# print(dirs)
-		for file in files:
-			label = root.split("/")[-1]
-			# print(label)
-			img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
-			img = imutils.rotate(img, random.randint(-15, 15))
-			img = imutils.translate(img, random.randint(-5, 5), random.randint(-3, 3))
-			# randomly scale image
-			scale = random.uniform(0.8, 1.2)
-			img = imutils.resize(img, width=int(img.shape[1] * scale), height=int(img.shape[0] * scale))
+	# trainData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/train")
 
-			# refit image to 28x28
-			img = cv2.resize(img, (28, 28))
+	# for root, dirs, files in trainData:
+	# 	# print(dirs)
+	# 	for file in files:
+	# 		label = root.split("/")[-1]
+	# 		# print(label)
+	# 		img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
+	# 		img = imutils.rotate(img, random.randint(-15, 15))
+	# 		img = imutils.translate(img, random.randint(-5, 5), random.randint(-3, 3))
+	# 		# randomly scale image
+	# 		scale = random.uniform(0.8, 1.2)
+	# 		img = imutils.resize(img, width=int(img.shape[1] * scale), height=int(img.shape[0] * scale))
 
-			# add noise to image
-			for i in range(0, random.randint(15, 100)):
-				x = random.randint(0, 27)
-				y = random.randint(0, 27)
-				img[x][y] = random.randint(0, 255)
+	# 		# refit image to 28x28
+	# 		img = cv2.resize(img, (28, 28))
 
-			# cv2.imshow("img", img)
-			# cv2.waitKey(0)
+	# 		# add noise to image
+	# 		for i in range(0, random.randint(15, 100)):
+	# 			x = random.randint(0, 27)
+	# 			y = random.randint(0, 27)
+	# 			img[x][y] = random.randint(0, 255)
 
-			# convert to 1D array
-			img = img.flatten()
-			# for each pixel, get value between 0.0 and 1.0
-			img = img / 255.0
-			trainingData.append(DataPoint(img, int(label), outputs))
+	# 		# cv2.imshow("img", img)
+	# 		# cv2.waitKey(0)
+
+	# 		# convert to 1D array
+	# 		img = img.flatten()
+	# 		# for each pixel, get value between 0.0 and 1.0
+	# 		img = img / 255.0
+	# 		trainingData.append(DataPoint(img, int(label), outputs))
 
 	### Calculate Accuracy ###
-	testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
+	# testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
 
 
 	data = []
 
-	for root, dirs, files in testData:
-		for file in files:
-			label = root.split("/")[-1]
-			# print(label)
-			img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
-			img = imutils.rotate(img, random.randint(-15, 15))
-			img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+	with open("/home/doui/Documents/Code-Stuff/Ai/test.txt", "r") as file:
+		# data format: (x,y) label
+		for line in file:
+			label = int(line.split(" ")[1])
+			x = float(line.split(",")[0].split("(")[1])
+			y = float(line.split(",")[1].split(")")[0])
+			data.append([np.array([x,y]), label])
 
-			# convert to 1D array
-			img = img.flatten()
-			# for each pixel, get value between 0.0 and 1.0
-			img = img / 255.0
-			data.append([img, int(label)])
+	# for root, dirs, files in testData:
+	# 	for file in files:
+	# 		label = root.split("/")[-1]
+	# 		# print(label)
+	# 		img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
+	# 		img = imutils.rotate(img, random.randint(-15, 15))
+	# 		img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+
+	# 		# convert to 1D array
+	# 		img = img.flatten()
+	# 		# for each pixel, get value between 0.0 and 1.0
+	# 		img = img / 255.0
+	# 		data.append([img, int(label)])
 
 	random.shuffle(data)
 
@@ -119,7 +136,7 @@ def train(load = ""):
 	for i in range(0, len(trainingData), batch_size):
 		batches.append(trainingData[i:i+batch_size])
 
-	print("Epochs:", len(batches))
+	print("Epochs:", epochs)
 
 	last_time = time.time()
 	# for i in range():
@@ -131,7 +148,8 @@ def train(load = ""):
 
 	accuracy_list = []
 
-	for i, batch in enumerate(batches):
+	for i in range(epochs):
+		random_batch = random.randint(0, len(batches) - 1)
 		print("Epoch", i)
 		print("Time elapsed:", round(time.time() - last_time, 2), "s")
 		last_time = time.time()
@@ -144,10 +162,10 @@ def train(load = ""):
 			accuracy_x = np.arange(0, len(accuracy_list))
 
 
-			plt.plot(accuracy_x, accuracy_list, color="red", marker='x')
+			plt.plot(accuracy_x, accuracy_list, color="red", marker='.')
 			plt.draw()
 
-			cost = network.TotalCost(batch)
+			cost = network.TotalCost(batches[random_batch])
 			print("Total cost:", cost)
 
 			# cost_list.append(cost)
@@ -163,7 +181,7 @@ def train(load = ""):
 			# plt.show()
 			# input("Press enter to continue...")
 
-		network.Learn(batch, learnRate)
+		network.Learn(batches[random_batch], learnRate)
 		# acc = accuracy(network, data)
 		# print("Accuracy:", round(acc, 2), "%")
 
@@ -178,24 +196,34 @@ def test(load):
 	network = NeuralNetwork(network_structure)
 	network.Load(load)
 
-	testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
+	# testData = os.walk("/home/doui/Documents/Code-Stuff/Ai/digits/test")
 
 
 	data = []
 
-	for root, dirs, files in testData:
-		for file in files:
-			label = root.split("/")[-1]
-			# print(label)
-			img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
-			img = imutils.rotate(img, random.randint(-15, 15))
-			img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+	with open("/home/doui/Documents/Code-Stuff/Ai/test.txt", "r") as file:
+		# data format: (x,y) label
+		for line in file:
+			label = int(line.split(" ")[1])
+			x = float(line.split(",")[0].split("(")[1])
+			y = float(line.split(",")[1].split(")")[0])
+			data.append([np.array([x,y]), label])
 
-			# convert to 1D array
-			img = img.flatten()
-			# for each pixel, get value between 0.0 and 1.0
-			img = img / 255.0
-			data.append([img, int(label)])
+   
+
+	# for root, dirs, files in testData:
+	# 	for file in files:
+	# 		label = root.split("/")[-1]
+	# 		# print(label)
+	# 		img = cv2.imread(root + "/" + file, cv2.IMREAD_GRAYSCALE)
+	# 		img = imutils.rotate(img, random.randint(-15, 15))
+	# 		img = imutils.translate(img, random.randint(-3, 3), random.randint(-3, 3))
+
+	# 		# convert to 1D array
+	# 		img = img.flatten()
+	# 		# for each pixel, get value between 0.0 and 1.0
+	# 		img = img / 255.0
+	# 		data.append([img, int(label)])
 
 
 	data_in = []
@@ -230,7 +258,7 @@ def test(load):
 	accuracy /= tests
 	print("Accuracy: " + str(round(accuracy, 2)) + "%")
 
-train()
-# train("checkpoint_100.npz")
+# train()
+# train("network.npz")
 # test("network.npz")
-# test("checkpoint_50.npz")
+test("checkpoint_1400.npz")

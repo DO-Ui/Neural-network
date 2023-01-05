@@ -1,6 +1,7 @@
 import numpy as np
 import math
-from numba import cuda, jit
+from numba import cuda
+import ActivationFunctions
 
 class Layer:
 	numNodesIn:int
@@ -26,12 +27,12 @@ class Layer:
 
 	##### HELPERS #####
 
-	# @jit
-	# def ActivationFunction(self, weightedInput:float) -> float:
-	# 	return 1 / (1 + math.exp(-weightedInput))
+	# @staticmethod
+	# def ActivationFunction(weightedInput:float) -> float:
+	# 	return 1.0 / (1.0 + math.exp(-weightedInput))
 
-	# @jit
-	# def ActivationFunctionDerivative(self, weightedInput:float) -> float:
+	# @staticmethod
+	# def ActivationFunctionDerivative(weightedInput:float) -> float:
 	# 	return math.exp(-weightedInput) / math.square(1 + math.exp(-weightedInput))
 
 	def NodeCost(self, outputActivation:float, expectedOutput:float) -> float:
@@ -42,8 +43,8 @@ class Layer:
 	@cuda.jit
 	def CalculateOutputLayerNodeValuesHelper(activations:np.array, weightedInputs:np.array, expectedOutputs:np.array, nodeValues:np.array):
 		nodeOut = cuda.grid(1)
-		activation_value = 1.0 / (1.0 + math.exp(-weightedInputs[nodeOut]))
-		nodeValues[nodeOut] = (2*(activations)[nodeOut] - (expectedOutputs)[nodeOut]) * (activation_value) * (1.0 - activation_value)
+		# activation_value:float = ActivationFunctions.ActivationFunction(weightedInputs[nodeOut])
+		nodeValues[nodeOut] = ActivationFunctions.NodeCostDerivative(activations[nodeOut], expectedOutputs[nodeOut]) * ActivationFunctions.ActivationFunctionDerivative(weightedInputs[nodeOut])
 
 	##### OUTPUTS #####
 
@@ -57,7 +58,7 @@ class Layer:
 			weightedInput += inputs[nodeIn] * weights[nodeIn, nodeOut]
 		weightedInputs[nodeOut] = weightedInput
 
-		activations[nodeOut] = 1 / (1 + math.exp(-weightedInput))
+		activations[nodeOut] = ActivationFunctions.ActivationFunction(weightedInput)
 
 	def CalculateOutputLayerNodeValues(self, expectedOutputs:np.array) -> np.array:
 		nodeValues = np.zeros(len(expectedOutputs), dtype=np.float32)
@@ -92,7 +93,7 @@ class Layer:
 			# if weightedInput > 1:
 			# 	print("panic")
 
-			activation = 1.0 / (1.0 + math.exp(-weightedInput))
+			activation = ActivationFunctions.ActivationFunction(weightedInput)
 			newNodeValues[newNodeIndex] = newNodeValue * activation * (1.0 - activation)
 
 		return newNodeValues
